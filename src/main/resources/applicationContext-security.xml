@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+	<!-- 定义数据源Bean，使用C3P0数据源实现 -->
+	<bean id="dataSource" destroy-method="close"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<!-- 指定连接数据库的驱动 -->
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl"
+			value="jdbc:mysql://localhost:3306/springsecurity?useUnicode=true&amp;characterEncoding=UTF-8" />
+		<property name="user" value="root" />
+		<property name="password" value="" />
+
+		<!-- 指定连接数据库连接池的最大连接数 -->
+		<property name="maxPoolSize" value="40" />
+		<!-- 指定连接数据库连接池的最小连接数 -->
+		<property name="minPoolSize" value="1" />
+		<!-- 指定连接数据库连接池的初始化连接数 -->
+		<property name="initialPoolSize" value="1" />
+		<!-- 指定连接数据库连接池的连接的最大空闲时间 -->
+		<property name="maxIdleTime" value="20000" />
+	</bean>
+
+	<bean id="userDetailsService"
+		class="org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<sec:http use-expressions="true">
+		<sec:intercept-url pattern="/president_portal.do**"
+			access="hasRole('ROLE_PRESIDENT')" />
+		<sec:intercept-url pattern="/manager_portal.do**"
+			access="hasRole('ROLE_MANAGER')" />
+		<sec:intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+		<sec:form-login default-target-url="/index.do"
+			always-use-default-target="true" />
+		<sec:logout logout-url="/j_spring_security_logout"   />
+		<sec:remember-me key="secret" />
+		<sec:csrf disabled="true"/>
+		<sec:session-management invalid-session-url="/sessionTimeout.jsp">
+			<sec:concurrency-control max-sessions="1"
+				error-if-maximum-exceeded="true" />
+		</sec:session-management>
+		
+	</sec:http>
+
+	<sec:authentication-manager alias="authenticationManager">
+		<sec:authentication-provider
+			user-service-ref="userDetailsService" />
+	</sec:authentication-manager>
+
+	<bean id="accessDecisionManager"
+		class="org.springframework.security.access.vote.AffirmativeBased">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.security.access.vote.RoleVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="userSalarySecurity"
+		class="org.springframework.security.access.intercept.aspectj.AspectJMethodSecurityInterceptor">
+		<property name="authenticationManager" ref="authenticationManager" />
+		<property name="accessDecisionManager" ref="accessDecisionManager" />
+		<property name="securityMetadataSource">
+			<sec:method-security-metadata-source>
+				<sec:protect method="com.train.service.UserService.raiseSalary"
+					access="ROLE_MANAGER" />
+				<sec:protect method="com.train.service.ReportService.createNewReport"
+					access="ROLE_PRESIDENT" />
+				<sec:protect method="com.train.service.ReportService.grantRead"
+					access="ROLE_PRESIDENT" />
+			</sec:method-security-metadata-source>
+		</property>
+	</bean>
+
+	<bean id="userSalarySecurityAspect" class="com.train.service.SalaryManagementAspect"
+		factory-method="aspectOf">
+		<property name="securityInterceptor" ref="userSalarySecurity" />
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+
+	<bean id="userDao" class="com.train.dao.UserDao">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<bean id="userService" class="com.train.service.UserService">
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+
+	<!-- ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓授权(Authorization)配置↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ -->
+	<bean id="president"
+		class="org.springframework.security.core.authority.SimpleGrantedAuthority">
+		<constructor-arg name="role" value="ROLE_PRESIDENT" />
+	</bean>
+
+
+	<bean id="aclAuthorizationStrategy"
+		class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
+		<constructor-arg name="auths">
+			<list>
+				<ref bean="president" />
+				<ref bean="president" />
+				<ref bean="president" />
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="permissionGrantingStrategy"
+		class="org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy">
+		<constructor-arg name="auditLogger">
+			<bean class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
+		</constructor-arg>
+	</bean>
+
+	<bean id="aclCache"
+		class="org.springframework.security.acls.domain.EhCacheBasedAclCache">
+		<constructor-arg name="cache">
+			<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+				<property name="overflowToDisk" value="true" />
+				<property name="maxElementsInMemory" value="1024" />
+			</bean>
+		</constructor-arg>
+		<constructor-arg name="permissionGrantingStrategy" ref="permissionGrantingStrategy"/>
+        <constructor-arg name="aclAuthorizationStrategy" ref="aclAuthorizationStrategy"/>
+	</bean>
+
+
+	<bean id="lookupStrategy"
+		class="org.springframework.security.acls.jdbc.BasicLookupStrategy">
+		<constructor-arg ref="dataSource" />
+		<constructor-arg ref="aclCache" />
+		<constructor-arg name="aclAuthorizationStrategy" ref="aclAuthorizationStrategy"/>
+			
+		<constructor-arg>
+			<bean class="org.springframework.security.acls.domain.ConsoleAuditLogger" />
+		</constructor-arg>
+	</bean>
+
+	<bean id="aclService"
+		class="org.springframework.security.acls.jdbc.JdbcMutableAclService">
+		<constructor-arg ref="dataSource" />
+		<constructor-arg ref="lookupStrategy" />
+		<constructor-arg ref="aclCache" />
+		<property name="classIdentityQuery" value="select @@identity" />
+		<property name="sidIdentityQuery" value="select @@identity" />
+	</bean>
+	<bean id="reportService" class="com.train.service.ReportService">
+		<property name="reportDao" ref="reportDao" />
+		<property name="mutableAclService" ref="aclService" />
+		<property name="platformTransactionManager" ref="transactionManager" />
+	</bean>
+
+	<bean id="reportDao" class="com.train.dao.ReportDao">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+</beans>

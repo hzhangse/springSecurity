@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="handlerMapping"
+		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping" />
+
+	<bean id="jspViewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<bean name="/index.do" class="com.train.controller.IndexController">
+		<property name="userService" ref="userService"></property>
+	</bean>
+	
+	<bean name="/salary.do" class="com.train.controller.SalaryController">
+		<property name="userService" ref="userService"></property>
+	</bean>
+	
+	
+	
+	<bean name="/manager_portal.do" class="com.train.controller.ManagerPortalController">
+	</bean>
+	<bean name="/president_portal.do" class="com.train.controller.PresidentPortalController">
+	</bean>
+	<bean name="/report.do"
+		class="com.train.controller.ReportController">
+		<property name="userService" ref="userService"></property>
+		<property name="reportService" ref="reportService"></property>
+	</bean>
+</beans>
