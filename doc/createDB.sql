@@ -80,11 +80,17 @@ CREATE TABLE acl_entry (
 	CONSTRAINT fk_acl_entry_acl FOREIGN KEY (sid) REFERENCES acl_sid (id)
 ) ENGINE=InnoDB;
 
-insert into users(username, password, enabled, name, salary) values ('mary', 'mary', 1, 'Mary', 6000);
+
+insert into users(username, password, enabled, name, salary) values ('hzhangse', 'hzhangse', 1, 'ZhangHong', 6000);
+insert into users(username, password, enabled, name, salary, manager_id) values ('mary', 'mary', 1, 'Mary', 6000, 'hzhangse');
 insert into users(username, password, enabled, name, salary, manager_id) values ('bob', 'bob', 1, 'Bob', 5500, 'mary');
 insert into users(username, password, enabled, name, salary, manager_id) values ('alex', 'alex', 1, 'Alex', 5000, 'bob');
 insert into users(username, password, enabled, name, salary, manager_id) values ('dale', 'dale', 1, 'Dale', 6000, 'bob');
 
+
+insert into authorities(username, authority) values ('hzhangse', 'ROLE_MANAGER'); 
+insert into authorities(username, authority) values ('hzhangse', 'ROLE_PRESIDENT'); 
+insert into authorities(username, authority) values ('hzhangse', 'ROLE_USER'); 
 insert into authorities(username, authority) values ('alex', 'ROLE_USER'); 
 insert into authorities(username, authority) values ('bob', 'ROLE_USER'); 
 insert into authorities(username, authority) values ('mary', 'ROLE_USER'); 

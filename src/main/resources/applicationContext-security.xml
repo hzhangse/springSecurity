@@ -49,11 +49,7 @@
 		
 	</sec:http>
 
-	<sec:authentication-manager alias="authenticationManager">
-		<sec:authentication-provider
-			user-service-ref="userDetailsService" />
-	</sec:authentication-manager>
-
+	
 	<bean id="accessDecisionManager"
 		class="org.springframework.security.access.vote.AffirmativeBased">
 		<constructor-arg>
