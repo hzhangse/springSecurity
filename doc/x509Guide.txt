@@ -1,0 +1,5 @@
+keytool -genkey -keyalg RSA -alias hzhangse -storetype PKCS12 -keypass password -storepass password -validity 3650 -keystore hzhangse.p12 -dname "cn=hzhangse,ou=train.com,o=train.com,l=china,st=shanghai,c=cn"
+
+keytool -export -alias hzhangse -file hzhangse.cer -keystore  hzhangse.p12 -storepass password -storetype PKCS12 -rfc   
+
+keytool -import -v -alias hzhangse -file hzhangse.cer -keystore  server.jks -storepass password  

@@ -14,7 +14,7 @@
 		<property name="jdbcUrl"
 			value="jdbc:mysql://localhost:3306/springsecurity?useUnicode=true&amp;characterEncoding=UTF-8" />
 		<property name="user" value="root" />
-		<property name="password" value="" />
+		<property name="password" value="root" />
 
 		<!-- 指定连接数据库连接池的最大连接数 -->
 		<property name="maxPoolSize" value="40" />
@@ -46,7 +46,7 @@
 			<sec:concurrency-control max-sessions="1"
 				error-if-maximum-exceeded="true" />
 		</sec:session-management>
-		
+		<sec:x509  subject-principal-regex="CN=(.*?)," user-service-ref="userDetailsService"/>
 	</sec:http>
 
 	
